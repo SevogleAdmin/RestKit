@@ -55,7 +55,7 @@
     if (self) {
         _matchers = [NSMutableArray new];
     }
-
+    
     return self;
 }
 
@@ -71,20 +71,24 @@
     [matcher release];
 }
 
-- (RKObjectMapping*)objectMappingForDictionary:(NSDictionary*)data {
-    NSAssert([data isKindOfClass:[NSDictionary class]], @"Dynamic object mapping can only be performed on NSDictionary mappables, got %@", NSStringFromClass([data class]));
+- (RKObjectMapping*)objectMappingForDictionary:(NSObject*)data {
+    //NSAssert([data isKindOfClass:[NSDictionary class]], @"Dynamic object mapping can only be performed on NSDictionary mappables, got %@", NSStringFromClass([data class]));
     RKObjectMapping* mapping = nil;
-
+    
     RKLogTrace(@"Performing dynamic object mapping for mappable data: %@", data);
-
+    
     // Consult the declarative matchers first
-    for (RKDynamicObjectMappingMatcher* matcher in _matchers) {
-        if ([matcher isMatchForData:data]) {
-            RKLogTrace(@"Found declarative match for data: %@.", [matcher matchDescription]);
-            return matcher.objectMapping;
+    if([data isKindOfClass:[NSDictionary class]]){
+        for (RKDynamicObjectMappingMatcher* matcher in _matchers) {
+            RKLogTrace(@"Checking match for data: %@ != %@.",data, [matcher matchDescription]);
+            if ([matcher isMatchForData:data]) {
+                RKLogTrace(@"Found declarative match for data: %@.", [matcher matchDescription]);
+                return matcher.objectMapping;
+            }else {
+            }
         }
     }
-
+    
     // Otherwise consult the delegates
     if (self.delegate) {
         mapping = [self.delegate objectMappingForData:data];
@@ -93,14 +97,14 @@
             return mapping;
         }
     }
-
+    
     if (self.objectMappingForDataBlock) {
         mapping = self.objectMappingForDataBlock(data);
         if (mapping) {
             RKLogTrace(@"Found dynamic delegateBlock match. objectMappingForDataBlock = %@", self.objectMappingForDataBlock);
         }
     }
-
+    
     return mapping;
 }
 
